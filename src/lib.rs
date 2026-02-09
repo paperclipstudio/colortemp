@@ -57,7 +57,7 @@ mod colortemp {
             r = 255.;
         } else {
             r = (temp as f64) - 60.;
-            r = 329.698727446 * r.powf(-329.698727446);
+            r = 329.698727446 * r.powf(-0.1332047592);
             normalise!(r);
         }
 
