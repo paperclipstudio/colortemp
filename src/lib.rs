@@ -4,6 +4,8 @@
 //! RGB values for specific color temperatures. It can also do
 //! the inverse by aproxmiation.
 //!
+//! Source can be found at [[https://tannerhelland.com/2012/09/18/convert-temperature-rgb-algorithm-code.html]]
+//!
 //! This crate includes unit tests to ensure functionality
 //!
 //! ## Examples
@@ -22,21 +24,9 @@
 //!
 //! If you wish to change this, PR's are always welcome 😁
 
-mod tests;
-
-macro_rules! normalise {
-    ($x:expr) => {{
-        if $x < 0.0 {
-            $x = 0.;
-        } else if $x > 255.0 {
-            $x = 255.0;
-        }
-    }};
-}
-
 pub use colortemp::*;
 mod colortemp {
-
+    use std::ops::{Mul, Sub};
 
     /// A simple container format to describe an RGB value
     #[derive(Debug, PartialEq)]
@@ -46,60 +36,49 @@ mod colortemp {
         pub b: f64,
     }
 
-
     // Calculate the RGB value of a color temperature (in Kelvin)
-    pub fn temp_to_rgb(kelvin: i64) -> RGB {
-        let (mut r, mut g, mut b);
+    pub fn temp_to_rgb(kelvin: u64) -> RGB {
         let temp = kelvin / 100;
-
         /* Calculate red */
-        if temp <= 66 {
-            r = 255.;
-        } else {
-            r = (temp as f64) - 60.;
-            r = 329.698727446 * r.powf(-0.1332047592);
-            normalise!(r);
-        }
-
-        /* Calculate green */
-        if temp <= 66 {
-            g = temp as f64;
-            g = 99.4708025861 * g.ln() - 161.1195681661;
-            normalise!(g);
-        } else {
-            g = temp as f64 - 60.;
-            g = 288.1221695283 * g.powf(-0.0755148492);
-            normalise!(g);
-        }
-
-        /* Feeling bluueeee */
-        if temp >= 66 {
-            b = 255.;
-        } else {
-
-            if temp <= 19 {
-                b = 0.;
-            } else {
-                b = temp as f64 - 10.;
-                b = 138.5177312231 * b.ln() - 305.0447927307;
-                normalise!(b);
-            }
-        }
-
-        return RGB {
-            r: r.round(),
-            g: g.round(),
-            b: b.round(),
+        let r = match temp {
+            (..66) => 255.0,
+            (66..) => (temp as f64)
+                .sub(60.0)
+                .powf(-0.1332047592)
+                .clamp(0.0, 255.0),
         };
-    }
 
+        let g = match temp {
+            (..67) => (temp as f64).ln().mul(99.4708025861).sub(161.1195681661),
+            (67..) => (temp as f64)
+                .sub(60.0)
+                .powf(-0.0755148492)
+                .mul(288.1221695283),
+        }
+        .clamp(0.0, 255.0)
+        .round();
+
+        let b = match temp {
+            (..20) => 0.0,
+            (20..66) => (temp as f64)
+                .sub(10.0)
+                .ln()
+                .mul(38.5177312231)
+                .sub(305.0447927307)
+                .clamp(0.0, 255.0),
+            (66..) => 255.0,
+        }
+        .round();
+
+        RGB { r: r.round(), g, b }
+    }
 
     /// Calculates the color temperature for a given RGB value
     ///
     /// This is implemented via a reverse lookup onto @temperature_to_rgb and
     /// as such should be considered rather slow
     ///
-    pub fn rgb_to_temp(col: RGB) -> i64 {
+    pub fn rgb_to_temp(col: RGB) -> u64 {
         let (r, b) = (col.r, col.b);
 
         let mut temp = 0;
@@ -118,6 +97,6 @@ mod colortemp {
             }
         }
 
-        return temp;
+        temp
     }
 }

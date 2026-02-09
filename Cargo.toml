@@ -1,9 +1,11 @@
 [package]
 name = "colortemp"
+edition = "2024"
 description = "Simple functions to calculate color temperatures and RGB values"
-version = "0.1.0"
+version = "0.1.1"
 license = "MIT/X11"
-authors = ["Katharina Fey <kookie@spacekookie.de>"]
+authors = ["Katharina Fey <kookie@spacekookie.de>", 
+"George Sanger <paperclipstudio@gmail.com>"]
 
 documentation = "https://docs.rs/colortemp/"
 repository = "https://github.com/spacekookie/colortemp/"
