@@ -39,14 +39,15 @@ mod colortemp {
     // Calculate the RGB value of a color temperature (in Kelvin)
     pub fn temp_to_rgb(kelvin: u64) -> RGB {
         let temp = kelvin / 100;
-        /* Calculate red */
+
         let r = match temp {
-            (..66) => 255.0,
-            (66..) => (temp as f64)
+            (..67) => 255.0,
+            (67..) => (temp as f64)
                 .sub(60.0)
                 .powf(-0.1332047592)
                 .clamp(0.0, 255.0),
-        };
+        }
+        .round();
 
         let g = match temp {
             (..67) => (temp as f64).ln().mul(99.4708025861).sub(161.1195681661),
@@ -70,7 +71,7 @@ mod colortemp {
         }
         .round();
 
-        RGB { r: r.round(), g, b }
+        RGB { r, g, b }
     }
 
     /// Calculates the color temperature for a given RGB value
